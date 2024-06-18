@@ -5,7 +5,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-
 import org.springframework.http.converter.HttpMessageNotWritableException;
 
 @ControllerAdvice
@@ -24,6 +23,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotWritableException.class)
     public ResponseEntity<String> handleHttpMessageNotWritableException(HttpMessageNotWritableException e) {
         return new ResponseEntity<>("Error de conversión de mensaje HTTP: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<String> handleCustomNotFoundException(NotFoundException e) {
+        return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     // Agrega más métodos @ExceptionHandler para manejar otros tipos de excepciones según sea necesario

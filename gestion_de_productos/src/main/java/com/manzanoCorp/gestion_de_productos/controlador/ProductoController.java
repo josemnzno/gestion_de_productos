@@ -2,6 +2,8 @@ package com.manzanoCorp.gestion_de_productos.controlador;
 
 import com.manzanoCorp.gestion_de_productos.modelo.Producto;
 import com.manzanoCorp.gestion_de_productos.repositorio.ProductoRepository;
+import com.manzanoCorp.gestion_de_productos.controllerAdvice.NotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,12 +23,8 @@ public class ProductoController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Producto> obtenerProductoPorId(@PathVariable String id) {
-        Producto producto = productoRepository.findById(id).orElse(null);
-        if (producto != null) {
-            return new ResponseEntity<>(producto, HttpStatus.OK);
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+        Producto producto = productoRepository.findById(id).orElseThrow(() -> new NotFoundException("Producto no encontrado con id: " + id));
+        return new ResponseEntity<>(producto, HttpStatus.OK);
     }
 
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -45,9 +43,12 @@ public class ProductoController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Producto> actualizarProducto(@PathVariable String id, @Valid @RequestBody Producto producto) {
+    public ResponseEntity<Producto> actualizarProducto(@PathVariable String id, @Valid @RequestBody Producto producto, BindingResult result) {
+        if (result.hasErrors()) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
         if (!productoRepository.existsById(id)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new NotFoundException("Producto no encontrado con id: " + id);
         }
         producto.setId(id);
         Producto productoActualizado = productoRepository.save(producto);
@@ -57,7 +58,7 @@ public class ProductoController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarProducto(@PathVariable String id) {
         if (!productoRepository.existsById(id)) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            throw new NotFoundException("Producto no encontrado con id: " + id);
         }
         productoRepository.deleteById(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
